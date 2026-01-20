@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "Kalshi Edge",
+  "version": "0.1.0",
+  "description": "Compare your probability vs market price to estimate edge.",
+  "action": {
+    "default_title": "Kalshi Edge"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ]
+}
