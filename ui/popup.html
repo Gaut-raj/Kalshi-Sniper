@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Kalshi Sniper</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main class="popup">
+      <p class="eyebrow">NBA hover analytics</p>
+      <h1>Kalshi Sniper</h1>
+      <p class="summary">
+        Hover a Kalshi NBA player prop and the extension will try to show L5, L10, and opponent hit rates.
+      </p>
+      <dl class="status-list">
+        <div>
+          <dt>Status</dt>
+          <dd id="status-text">Checking active tab...</dd>
+        </div>
+        <div>
+          <dt>Source</dt>
+          <dd>Basketball Reference game logs</dd>
+        </div>
+      </dl>
+      <p class="footnote">
+        If hover cards do not appear, the live Kalshi markup likely needs selector tuning.
+      </p>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>
