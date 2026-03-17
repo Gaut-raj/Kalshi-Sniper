@@ -1,4 +1,4 @@
-import { fetchPropInsights } from "../services/basketballReferenceService.js";
+import { fetchPropInsights } from "../services/espnGameLogService.js";
 import { parseKalshiPropContext } from "../services/kalshiapiservice.js";
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {

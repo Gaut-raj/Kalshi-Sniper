@@ -9,7 +9,7 @@
   "host_permissions": [
     "https://kalshi.com/*",
     "https://*.kalshi.com/*",
-    "https://www.basketball-reference.com/*"
+    "https://www.espn.com/*"
   ],
   "background": {
     "service_worker": "background/background.js",
