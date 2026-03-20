@@ -60,6 +60,10 @@ export function parseKalshiPropContext(payload) {
   return null;
 }
 
+export function parseKalshiPropContextFromMarketTitle(title) {
+    return parsePropText(title, [title]);
+    }
+    
 function buildCandidateList(payload) {
   const values = [
     payload?.hoverText,
