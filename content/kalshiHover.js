@@ -7,9 +7,12 @@
   let hoverTimer = null;
   let lastSignature = "";
   let activeTarget = null;
+  let selectionTimer = null;
 
   document.addEventListener("mouseover", handleMouseOver, true);
   document.addEventListener("mouseout", handleMouseOut, true);
+  document.addEventListener("mouseup", handleSelectionChange, true);
+  document.addEventListener("keyup", handleSelectionChange, true);
   window.addEventListener("scroll", hideCard, true);
 
   function handleMouseOver(event) {
@@ -23,37 +26,8 @@
       return;
     }
 
-    const signature = JSON.stringify(context);
-    if (signature === lastSignature) {
-      return;
-    }
-
-    lastSignature = signature;
     activeTarget = element;
-    showCard(element, "Loading Kalshi Sniper...");
-
-    window.clearTimeout(hoverTimer);
-    hoverTimer = window.setTimeout(() => {
-      chrome.runtime.sendMessage(
-        {
-          type: "KALSHI_SNIPER_HOVER",
-          payload: context
-        },
-        (response) => {
-          if (chrome.runtime.lastError) {
-            showCard(element, "Background request failed.");
-            return;
-          }
-
-          if (!response?.ok) {
-            showCard(element, response?.error || "No stats found.");
-            return;
-          }
-
-          renderInsights(element, response.result);
-        }
-      );
-    }, REQUEST_DEBOUNCE_MS);
+    requestInsights(element, context);
   }
 
   function handleMouseOut(event) {
@@ -75,9 +49,44 @@
     }
   }
 
-  function collectHoverContext(element) {
+  function handleSelectionChange() {
+    window.clearTimeout(selectionTimer);
+    selectionTimer = window.setTimeout(() => {
+      const selection = window.getSelection();
+      const selectedText = selection ? sanitizeText(selection.toString()) : "";
+
+      if (!selectedText) {
+        return;
+      }
+
+      const range = selection.rangeCount ? selection.getRangeAt(0) : null;
+      const node = range?.commonAncestorContainer;
+      const anchorElement = node instanceof Element ? node : node?.parentElement;
+      if (!anchorElement) {
+        return;
+      }
+
+      const context = collectHoverContext(anchorElement, selectedText);
+      if (!context) {
+        return;
+      }
+
+      const rect = range.getBoundingClientRect();
+      const virtualAnchor = createVirtualAnchor(rect);
+      requestInsights(virtualAnchor, context);
+    }, 80);
+  }
+
+  function collectHoverContext(element, selectedText) {
     const elementText = sanitizeText(element.textContent || "");
     const ancestorTexts = [];
+    const row = element.closest("tr");
+    const rowText = row ? sanitizeText(row.textContent || "") : "";
+    const cellTexts = row
+      ? Array.from(row.querySelectorAll("th, td"))
+          .map((cell) => sanitizeText(cell.textContent || ""))
+          .filter(Boolean)
+      : [];
 
     let current = element.closest("[data-testid], article, section, li, div, button") || element;
     let depth = 0;
@@ -100,6 +109,9 @@
     return {
       hoverText: cleanedHoverText,
       elementText,
+      selectedText: sanitizeText(selectedText || ""),
+      rowText,
+      cellTexts,
       ancestorTexts,
       pageTitle: document.title
     };
@@ -129,6 +141,39 @@
     ].join("");
 
     showCard(anchor, html, true);
+  }
+
+  function requestInsights(anchor, context) {
+    const signature = JSON.stringify(context);
+    if (signature === lastSignature) {
+      return;
+    }
+
+    lastSignature = signature;
+    showCard(anchor, "Loading Kalshi Sniper...");
+
+    window.clearTimeout(hoverTimer);
+    hoverTimer = window.setTimeout(() => {
+      chrome.runtime.sendMessage(
+        {
+          type: "KALSHI_SNIPER_HOVER",
+          payload: context
+        },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            showCard(anchor, "Background request failed.");
+            return;
+          }
+
+          if (!response?.ok) {
+            showCard(anchor, response?.error || "No stats found.");
+            return;
+          }
+
+          renderInsights(anchor, response.result);
+        }
+      );
+    }, REQUEST_DEBOUNCE_MS);
   }
 
   function formatRate(summary) {
@@ -193,6 +238,14 @@
     document.documentElement.appendChild(style);
     document.body.appendChild(card);
     return card;
+  }
+
+  function createVirtualAnchor(rect) {
+    return {
+      getBoundingClientRect() {
+        return rect;
+      }
+    };
   }
 
   function escapeHtml(value) {

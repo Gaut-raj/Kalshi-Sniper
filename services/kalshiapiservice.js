@@ -57,7 +57,7 @@ export function parseKalshiPropContext(payload) {
     }
   }
 
-  return null;
+  return inferPropFromFragments(candidates);
 }
 
 export function parseKalshiPropContextFromMarketTitle(title) {
@@ -68,7 +68,10 @@ function buildCandidateList(payload) {
   const values = [
     payload?.hoverText,
     payload?.elementText,
+    payload?.selectedText,
+    payload?.rowText,
     ...(Array.isArray(payload?.ancestorTexts) ? payload.ancestorTexts : []),
+    ...(Array.isArray(payload?.cellTexts) ? payload.cellTexts : []),
     payload?.pageTitle
   ];
 
@@ -112,6 +115,68 @@ function parsePropText(text, allCandidates) {
       stat,
       opponent
     };
+  }
+
+  return null;
+}
+
+function inferPropFromFragments(candidates) {
+  const playerName = inferPlayerName(candidates);
+  const stat = inferStat(candidates);
+  const lineDetails = inferLineAndDirection(candidates);
+
+  if (!playerName || !stat || !lineDetails) {
+    return null;
+  }
+
+  return {
+    playerName,
+    line: lineDetails.line,
+    direction: lineDetails.direction,
+    stat,
+    opponent: inferOpponent(candidates)
+  };
+}
+
+function inferPlayerName(candidates) {
+  for (const value of candidates) {
+    const match = value.match(/\b([A-Z][a-z]+(?:\s[A-Z][a-z]+){1,3})\b/);
+    if (match?.[1]) {
+      return match[1].trim();
+    }
+  }
+
+  return null;
+}
+
+function inferStat(candidates) {
+  for (const value of candidates) {
+    const stat = mapStat(value);
+    if (stat) {
+      return stat;
+    }
+  }
+
+  return null;
+}
+
+function inferLineAndDirection(candidates) {
+  for (const value of candidates) {
+    const overUnderMatch = value.match(/\b(?<direction>over|under)\b[^\d]*(?<line>\d+(?:\.\d+)?)/i);
+    if (overUnderMatch?.groups?.line) {
+      return {
+        line: Number.parseFloat(overUnderMatch.groups.line),
+        direction: overUnderMatch.groups.direction.toLowerCase()
+      };
+    }
+
+    const plusMatch = value.match(/\b(?<line>\d+(?:\.\d+)?)\+?\b/);
+    if (plusMatch?.groups?.line || plusMatch?.[1]) {
+      return {
+        line: Number.parseFloat(plusMatch.groups?.line || plusMatch[1]),
+        direction: "over"
+      };
+    }
   }
 
   return null;

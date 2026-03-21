@@ -1,6 +1,6 @@
 # Kalshi Sniper
 
-Kalshi Sniper is a Chrome extension scaffold for NBA player props on Kalshi. When you hover a likely player prop market, the extension tries to parse the player, stat, line, and opponent from the page, scrapes ESPN game logs, and shows:
+Kalshi Sniper is a Chrome extension scaffold for NBA player props on Kalshi. When you hover a likely player prop market or highlight player/prop text inside tabular layouts, the extension tries to parse the player, stat, line, and opponent from the page, scrapes ESPN game logs, and shows:
 
 - L5 hit rate
 - L10 hit rate
@@ -25,14 +25,14 @@ manifest.json
 
 ## How it works
 
-1. The content script watches hovered Kalshi elements and collects nearby visible text.
+1. The content script watches hovered Kalshi elements and selected table text, then collects nearby visible text.
 2. The background worker parses that text into a prop request.
 3. The ESPN scraper resolves the player page, fetches the current season game log, and computes hit rates.
 4. The content script renders a compact hover card next to the prop.
 
 ## Important assumptions
 
-- The current parser is tuned for common text patterns such as `Jayson Tatum over 29.5 points` or `Nikola Jokic 10+ rebounds`.
+- The current parser is tuned for common text patterns such as `Jayson Tatum over 29.5 points` or `Nikola Jokic 10+ rebounds`, and can infer props when player, line, and stat are split across table cells.
 - Hit rates are computed against the displayed line. If no direction is detected, the extension assumes an `over` style prop.
 - Opponent history is based on the current season game log against the parsed opponent abbreviation.
 - ESPN player resolution is based on ESPN search result links, then the extension scrapes the player game log page.
