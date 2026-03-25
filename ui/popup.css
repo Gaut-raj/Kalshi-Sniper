@@ -84,3 +84,13 @@ h1 {
   font-weight: 600;
   cursor: pointer;
 }
+
+.button.secondary {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+
+.button:hover {
+  background: #5eead4cc;
+}
